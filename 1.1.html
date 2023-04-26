@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle Processor</title>
+    <style>
+/* Add styles for the retractable section */
+#retractable-section {
+  margin-top: 20px;
+}
+
+#toggle-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#toggle-button:hover {
+  background-color: #45a049;
+}
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        #upload-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #upload-form input[type="file"] {
+            display: none;
+        }
+        #upload-form label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #upload-form label:hover {
+            background-color: #45a049;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Style selected rows */
+        #result-table tr.selected {
+            background-color: #ffcccc;
+        }
+
+        /* Style remove/add buttons */
+        .remove-button {
+            border: none;
+            background-color: transparent;
+        }
+
+        .remove-button:hover {
+            cursor:pointer;
+        }
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Subtitle Processor</h1>
+    </header>
+    <form id="upload-form">
+        <input type="file" id="file-input" accept=".srt">
+        <label for="file-input">Choose .srt file</label>
+    </form>
+<!-- Add a new div element for the retractable section -->
+<div id="retractable-section" style="display: none;">
+  <button id="toggle-button">Hide Options</button>
+  <div id="options" style="display: none;">
+    <input type="checkbox" id="remove-1-letter-words">Remove 1-letter words (<span id="num-removed-1-letter-words">0</span> removed)<br>
+    <input type="checkbox" id="remove-2-letter-words">Remove 2-letter words (<span id="num-removed-2-letter-words">0</span> removed)<br>
+      <button id="save-button">Save as Excel file</button>
+</div>
+</div>
+
+
+
+
+
+    <table id="result-table" style="display:none;">
+        <tr>
+            <th>#</th>
+            <th>Word</th>
+            <th>Translation</th>
+            <th>Sentence Example</th>
+            <th><button id="select-all-button">Select All for Removal</button></th>
+        </tr>
+
+    </table>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jschardet/1.6.0/jschardet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        var resultTable = document.getElementById('result-table');
+        var removeButtons = document.getElementsByClassName('remove-button');
+        // Define a function to process the uploaded .srt file
+        function processSrtFile(file) {
+    // Specify the encoding of the .srt file
+    var encoding = 'windows-1252'; // Change this line
+
+    // Use the specified encoding to read the contents of the file
+    var reader = new FileReader();
+    reader.readAsText(file, encoding);
+    reader.onload = function(event) {
+        // Get the contents of the file as a string
+        var srtContents = event.target.result;
+
+
+                    // Create an object to store the sentences for each unique word
+                    var wordSentences = {};
+                   // Process the .srt file and remove the time brackets
+var srtLines = srtContents.split('\n');
+var subtitles = '';
+for (var i = 0; i < srtLines.length; i++) {
+    if (!srtLines[i].match(/^[0-9]+$/) && !srtLines[i].match(/^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$/)) {
+        subtitles += srtLines[i] + '\n';
+
+        // Split the line into words and add the sentence to the wordSentences object
+        var lineWords = srtLines[i].split(/[^a-z\u00C0-\u017F]+/i); // Change this line
+        for (var j = 0; j < lineWords.length; j++) {
+            var word = lineWords[j].toLowerCase();
+            if (word.length > 0 && isNaN(word)) {
+                if (!wordSentences[word]) {
+                    wordSentences[word] = [];
+                }
+                wordSentences[word].push(srtLines[i]);
+            }
+        }
+    }
+}
+
+// Extract the unique words from the subtitles
+var words = subtitles.split(/[^a-z\u00C0-\u017F]+/i); // Change this line
+var uniqueWords = [];
+for (var i = 0; i < words.length; i++) {
+    if (words[i].length > 0 && isNaN(words[i]) && uniqueWords.indexOf(words[i].toLowerCase()) === -1) {
+        uniqueWords.push(words[i].toLowerCase());
+    }
+}
+
+
+
+
+                    // Update the front-end with the processed results
+                    var resultTable = document.getElementById('result-table');
+                    resultTable.style.display = 'table';
+
+                    for (var i = 0; i < uniqueWords.length; i++) {
+                        var word = uniqueWords[i];
+                        var row = resultTable.insertRow(-1);
+                        row.insertCell(0).innerHTML = i + 1;
+                        row.insertCell(1).innerHTML = word;
+                        row.insertCell(2).innerHTML = '';
+
+                        // Add the first sentence from the wordSentences object as an example sentence
+                        row.insertCell(3).innerHTML = wordSentences[word][0];
+
+                        // Add a new cell with a remove/add button
+                        var removeButton = document.createElement('button');
+                        removeButton.innerHTML = '🗑️'; // Change this line
+                        removeButton.classList.add('remove-button');
+                        row.insertCell(4).appendChild(removeButton);
+                    }
+
+                    // Add event listeners to the remove/add buttons
+                    var removeButtons = document.getElementsByClassName('remove-button');
+                    for (var i = 0; i < removeButtons.length; i++) {
+                        console.log('Adding event listener for pin icon', i);
+
+                        removeButtons[i].addEventListener('click', function(event) {
+                            console.log('Pin icon clicked!');
+
+                            // Toggle the selected state of the row
+                            var row = event.target.parentElement.parentElement;
+                            row.classList.toggle('selected');
+                            if (row.classList.contains('selected')) {
+                                event.target.innerHTML = '➕';
+                                event.target.style.backgroundColor = 'green';
+                            } else {
+                                event.target.innerHTML = '🗑️'; // Change this line
+                                event.target.style.backgroundColor = '';
+                            }
+
+                            // Show or hide the apply button
+                            var rowsSelected = resultTable.getElementsByClassName('selected');
+                            if (rowsSelected.length > 0) {
+                                applyButton.style.display = 'block';
+                            } else {
+                                applyButton.style.display = 'none';
+                            }
+                        });
+                    }
+                };
+            };
+        
+
+        // Handle file uploads
+        document.getElementById('file-input').addEventListener('change', function() {
+            var file = this.files[0];
+            processSrtFile(file);
+        });
+function updateRowNumbers() {
+  var rows = document.querySelectorAll('#result-table tr');
+  var rowNum = 1;
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i].style.display !== 'none') {
+      rows[i].cells[0].textContent = rowNum;
+      rowNum++;
+    }
+  }
+}
+
+// Create a floating button for apply
+var applyButton = document.createElement('button');
+applyButton.innerHTML = 'Apply';
+applyButton.style.position = 'fixed';
+applyButton.style.bottom = '40px'; // Change this line
+applyButton.style.right = '40px'; // Change this line
+applyButton.style.display = 'none';
+applyButton.style.borderRadius = '50%'; // Add this line
+applyButton.style.opacity = '0.5'; // Add this line
+applyButton.style.transform = 'scale(3)'; // Add this line
+applyButton.style.width = '50px'; // Add this line
+applyButton.style.height = '50px'; // Add this line
+applyButton.style.lineHeight = '50px'; // Add this line
+document.body.appendChild(applyButton);
+
+
+
+        // Add an event listener to the apply button
+        applyButton.addEventListener('click', function() {
+            // Remove the selected rows
+            var rows = resultTable.getElementsByTagName('tr');
+            for (var i = rows.length - 1; i >= 1; i--) {
+                if (rows[i].classList.contains('selected')) {
+                    resultTable.deleteRow(i);
+                }
+            }
+
+            // Update the row numbers
+            for (var i = 1; i < rows.length; i++) {
+                rows[i].cells[0].innerHTML = i;
+            }
+
+            // Hide the apply button
+            applyButton.style.display = 'none';
+        });
+
+        // Add an event listener to the select all for removal button
+        document.getElementById('select-all-button').addEventListener('click', function() {
+            // Toggle the selected state of all rows
+            var rows = resultTable.getElementsByTagName('tr');
+            for (var i = 1; i < rows.length; i++) {
+                rows[i].classList.toggle('selected');
+                var removeButton = rows[i].getElementsByClassName('remove-button')[0];
+                if (rows[i].classList.contains('selected')) {
+                    removeButton.innerHTML = '➕';
+                    removeButton.style.backgroundColor = 'green';
+                } else {
+                    removeButton.innerHTML = '🗑️'; // Change this line
+                    removeButton.style.backgroundColor = '';
+                }
+            }
+
+            // Show or hide the apply button
+            var rowsSelected = resultTable.getElementsByClassName('selected');
+            if (rowsSelected.length > 0) {
+                applyButton.style.display = 'block';
+            } else {
+                applyButton.style.display = 'none';
+            }
+        });
+// Add event listeners to the checkboxes
+document.getElementById('remove-1-letter-words').addEventListener('change', function() {
+  var numRemoved = 0;
+  if (this.checked) {
+    // Remove 1-letter words from the table
+    var rows = document.querySelectorAll('#result-table tr');
+    for (var i = 1; i < rows.length; i++) {
+      var word = rows[i].cells[1].textContent;
+      if (word.length === 1) {
+        rows[i].style.display = 'none';
+        numRemoved++;
+      }
+    }
+  } else {
+    // Show all rows
+    var rows = document.querySelectorAll('#result-table tr');
+    for (var i = 1; i < rows.length; i++) {
+      rows[i].style.display = '';
+    }
+  }
+  // Update the number of removed words
+  document.getElementById('num-removed-1-letter-words').textContent = numRemoved;
+  // Update row numbers
+  updateRowNumbers();
+});
+
+
+
+document.getElementById('remove-2-letter-words').addEventListener('change', function() {
+  var numRemoved = 0;
+  if (this.checked) {
+    // Remove 2-letter words from the table
+    var rows = document.querySelectorAll('#result-table tr');
+    for (var i = 1; i < rows.length; i++) {
+      var word = rows[i].cells[1].textContent;
+      if (word.length === 2) {
+        rows[i].style.display = 'none';
+        numRemoved++;
+      }
+    }
+  } else {
+    // Show all rows
+    var rows = document.querySelectorAll('#result-table tr');
+    for (var i = 1; i < rows.length; i++) {
+      rows[i].style.display = '';
+    }
+  }
+  // Update the number of removed words
+  document.getElementById('num-removed-2-letter-words').textContent = numRemoved;
+  // Update row numbers
+  updateRowNumbers();
+});
+
+
+
+// Show the retractable section when a file is uploaded successfully
+document.getElementById('file-input').addEventListener('change', function() {
+  document.getElementById('retractable-section').style.display = 'block';
+  document.getElementById('options').style.display = 'block';
+});
+ 
+
+// Add an event listener to the toggle button
+document.getElementById('toggle-button').addEventListener('click', function() {
+  var options = document.getElementById('options');
+  if (options.style.display === 'none') {
+    options.style.display = 'block';
+    this.textContent = 'Hide Options';
+  } else {
+    options.style.display = 'none';
+    this.textContent = 'Show Options';
+  }
+});
+
+// Add an event listener to the save button
+document.getElementById('save-button').addEventListener('click', function() {
+  // Get the data from the table
+  var data = [['Word', 'Translation', 'Sentence Example']];
+  var rows = document.querySelectorAll('#result-table tr');
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i].style.display !== 'none') {
+      var rowData = [];
+      rowData.push(rows[i].cells[1].textContent);
+      rowData.push(rows[i].cells[2].textContent);
+      rowData.push(rows[i].cells[3].textContent);
+      data.push(rowData);
+    }
+  }
+
+  // Create a new workbook and add the data to a sheet
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+  // Generate an Excel file and save it
+  XLSX.writeFile(wb, 'data.xlsx');
+});
+
+    </script>
+</body>
+</html>
