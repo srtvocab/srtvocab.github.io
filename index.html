@@ -4,7 +4,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Subtitle Processor(BETA)</title>
+    <title>Subtitle Processor</title>
     <style>
 /* Add styles for the retractable section */
 #retractable-section {
@@ -91,7 +91,7 @@
 </head>
 <body>
     <header>
-        <h1>Subtitle Processor</h1>
+        <h1>Subtitle Processor(BETA)</h1>
     </header>
     <form id="upload-form">
         <input type="file" id="file-input" accept=".srt">
@@ -143,7 +143,7 @@
                     var wordSentences = {};
 var chineseJapaneseRegex = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
 if (chineseJapaneseRegex.test(srtContents)) {
-    alert('This script will be supported soon.');
+    alert('This file contains script that will be supported soon(Hiragana, Katakana, Bopomofo, Hangul, Jamo, or Kanbun)');
     return;
 }
 
