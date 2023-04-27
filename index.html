@@ -149,7 +149,7 @@ for (var i = 0; i < srtLines.length; i++) {
         subtitles += srtLines[i] + '\n';
 
         // Split the line into words and add the sentence to the wordSentences object
-        var lineWords = srtLines[i].split(/[^a-z\u00C0-\u017F]+/i); // Change this line
+        var lineWords = srtLines[i].split(/[^a-z\u00C0-\u00FF\u0100-\u017F\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u2E80-\u2FDF\uAC00-\uD7AF\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u2C80-\u2CFF]+/i); // Change this line
         for (var j = 0; j < lineWords.length; j++) {
             var word = lineWords[j].toLowerCase();
             if (word.length > 0 && isNaN(word)) {
@@ -163,7 +163,7 @@ for (var i = 0; i < srtLines.length; i++) {
 }
 
 // Extract the unique words from the subtitles
-var words = subtitles.split(/[^a-z\u00C0-\u017F]+/i); // Change this line
+var words = subtitles.split(/[^a-z\u00C0-\u00FF\u0100-\u017F\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u2E80-\u2FDF\uAC00-\uD7AF\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u2C80-\u2CFF]+/i); // Change this line
 var uniqueWords = [];
 for (var i = 0; i < words.length; i++) {
     if (words[i].length > 0 && isNaN(words[i]) && uniqueWords.indexOf(words[i].toLowerCase()) === -1) {
