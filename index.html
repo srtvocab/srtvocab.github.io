@@ -4,7 +4,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Subtitle Processor</title>
+    <title>Subtitle Processor(BETA)</title>
     <style>
 /* Add styles for the retractable section */
 #retractable-section {
@@ -141,6 +141,12 @@
 
                     // Create an object to store the sentences for each unique word
                     var wordSentences = {};
+var chineseJapaneseRegex = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
+if (chineseJapaneseRegex.test(srtContents)) {
+    alert('This script will be supported soon.');
+    return;
+}
+
                    // Process the .srt file and remove the time brackets
 var srtLines = srtContents.split('\n');
 var subtitles = '';
