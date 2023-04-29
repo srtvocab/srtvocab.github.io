@@ -104,10 +104,19 @@
     <input type="checkbox" id="remove-1-letter-words">Remove 1-letter words (<span id="num-removed-1-letter-words">0</span> removed)<br>
     <input type="checkbox" id="remove-2-letter-words">Remove 2-letter words (<span id="num-removed-2-letter-words">0</span> removed)<br>
       <button id="save-button">Save as Excel file</button>
+<button id="share-button">Share</button>
 </div>
 </div>
 
 
+<!-- Add the modal -->
+<div id="share-modal" style="display: none;">
+  <h2>Share to:</h2>
+  <button id="share-email">Email</button>
+  <button id="share-drive">Google Drive</button>
+  <button id="share-telegram">Telegram</button>
+  <button id="share-whatsapp">WhatsApp</button>
+</div>
 
 
 
@@ -123,6 +132,7 @@
     </table>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jschardet/1.6.0/jschardet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://apis.google.com/js/api.js"></script>
     <script>
         var resultTable = document.getElementById('result-table');
         var removeButtons = document.getElementsByClassName('remove-button');
@@ -407,6 +417,83 @@ document.getElementById('save-button').addEventListener('click', function() {
   // Generate an Excel file and save it
   XLSX.writeFile(wb, 'data.xlsx');
 });
+
+// Add an event listener to the share button
+document.getElementById('share-button').addEventListener('click', function() {
+  // Show the modal
+  document.getElementById('share-modal').style.display = 'block';
+});
+
+// Add event listeners to the sharing options
+document.getElementById('share-email').addEventListener('click', function() {
+  // Add your email sharing logic here
+  var emailLink = document.createElement('a');
+  emailLink.href = 'mailto:?subject=My File&body=Here is my file.&attachment=data.xlsx';
+  emailLink.click();
+});
+
+document.getElementById('share-drive').addEventListener('click', function() {
+  // Add your Google Drive sharing logic here
+  // Load the gapi client and auth2 libraries
+  gapi.load('client:auth2', function() {
+    // Initialize the gapi client
+    gapi.client.init({
+      // Your API key and client ID
+      apiKey: 'AIzaSyA2h1uv6tPXsmRXQKrUKtya2bwYD4wa-0k',
+      clientId: '919329350378-6020ppt58if80usgta6ovkcs8hema1uf.apps.googleusercontent.com',
+      // The scopes your app needs to access
+      scope: 'https://www.googleapis.com/auth/drive.file'
+    }).then(function() {
+      // Sign in the user if they are not already signed in
+      if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        gapi.auth2.getAuthInstance().signIn();
+      }
+
+      // Upload the file to Google Drive
+      gapi.client.drive.files.create({
+        resource: {
+          name: 'data.xlsx',
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        },
+        media: {
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          body: data // This should be the binary data of your file
+        }
+      }).then(function(response) {
+        console.log('File uploaded:', response.result);
+      });
+    });
+  });
+});
+
+document.getElementById('share-telegram').addEventListener('click', function() {
+  // Add your Telegram sharing logic here
+  var TelegramBot = require('node-telegram-bot-api');
+  var bot = new TelegramBot('YOUR_BOT_TOKEN');
+
+  bot.sendDocument('CHAT_ID', 'data.xlsx');
+});
+document.getElementById('share-whatsapp').addEventListener('click', function() {
+  // Add your WhatsApp sharing logic here
+
+const { Client } = require('whatsapp-web.js');
+const client = new Client();
+
+client.on('qr', (qr) => {
+  // Generate and scan this code with your phone
+  console.log('QR RECEIVED', qr);
+});
+
+client.on('ready', () => {
+  console.log('Client is ready!');
+});
+
+client.initialize();
+
+client.sendMessage('PHONE_NUMBER', new MessageMedia('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data));
+
+});
+
 
     </script>
 </body>
